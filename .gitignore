@@ -1,2 +1,6 @@
 fonty zip/
 words.txt
+text_reader.py
+__pycache__/
+.vscode/
+test_reader.py
