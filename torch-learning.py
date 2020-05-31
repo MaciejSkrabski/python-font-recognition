@@ -1,14 +1,48 @@
 #%%
+from PIL import Image
+import numpy as np
+
+
+class Img:
+    def __init__(self, row):
+        def to_numpy(word):
+            # loading image to numpy array
+            pic = Image.open("dataset/"+word+".jpg")
+            pix = [pic.getdata(0)]
+            return np.asarray(pix)/255 # converting to float in range [0, 1]
+    
+        # the object has id, a word depicted on it's image, a label
+        # with the font used to write the word on the image and data,
+        # which is a numpy array of pixels' brightnesses in range[0,1].
+        self.id = int(row[0])
+        self.word = row[1]
+        self.label = row[2]
+        self.data = to_numpy(self.word)
+
+    
 
 #%%
-if __name__ == "__main__":
-    from csv import reader
+from csv import reader
 
-    l=[]
-    with open("dataset/dataset.csv") as csvfile:
-        r = reader(csvfile)
-        for row in r:
-            l.append(row)
-    print(l[:5], l[-5:], len(l))
+list_of_images=[]
+list_of_rows=[]
+with open("dataset/dataset.csv") as csvfile:
+    r = reader(csvfile)
+    next(r)
+    for row in r:
+        list_of_rows.append(row)
+
+# print(l[:5], l[-5:], len(l)) # test
+#%%
+for row in list_of_rows:
+    list_of_images.append(Img(row))
+#test
+row = list_of_images[0]
+row2 = list_of_images[599]
+print(row.id, row.word, row.label, row.data, row.data.shape)
+print(row2.id, row2.word, row2.label, row2.data, row2.data.shape)
+
+
+
 
 # %%
