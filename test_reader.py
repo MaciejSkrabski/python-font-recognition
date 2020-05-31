@@ -41,5 +41,6 @@ def words_to_imgs(wordlist=['raz', 'dwa', 'trzy'], font='', label='', csv_name='
         img.save('dataset/'+word+'.jpg')
 # %%
 if __name__ == "__main__":
-    "haba"
-# %%
+    wordlist = subset_of_csv("words.csv", 600)
+    words_to_imgs(wordlist[:5], "fonty/Lato-Regular.ttf", "Lato", "testowe.csv")
+    
