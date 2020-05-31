@@ -1,9 +1,10 @@
 #%%
-from dataset_creation import subset_of_csv, words_to_imgs
 
+#%%
 if __name__ == "__main__":
-    wordlist = subset_of_csv("words.csv", 600)
-    print(wordlist)
-    words_to_imgs(wordlist[:5], "fonty/Lato-Regular.ttf", "Lato", "testowe.csv")
-
+    from dataset_creation import subset_of_csv, words_to_imgs
+    sub = subset_of_csv("words.csv", 600)
+    words_to_imgs(sub[:200], "fonty/Lato-Regular.ttf", "Lato-Regular", "testowe.csv")
+    words_to_imgs(sub[200:400], "fonty/LiberationSans-Regular.ttf", "LiberationSans-Regular", "testowe.csv")
+    words_to_imgs(sub[400:], "fonty/LiberationSerif-Regular.ttf", "LiberationSerif-Regular", "testowe.csv")
 # %%

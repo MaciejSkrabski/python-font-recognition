@@ -9,7 +9,7 @@ def subset_of_csv(path, output_size):
             arr.append(row[0])
     new_word_list = sample(arr, k=output_size)
     return new_word_list
-subset = subset_of_csv("words.csv", 600)
+
 #%%
 def append_dict_as_row(file_name, dict_of_elem, field_names):
     from csv import DictWriter
@@ -40,6 +40,57 @@ def words_to_imgs(wordlist=['raz', 'dwa', 'trzy'], font='', label='', csv_name='
         img = img.rotate(randint(-20,20), resample = Image.BICUBIC, fillcolor="white", expand=1).resize([300, 300])
         img.save('dataset/'+word+'.jpg')
 # %%
+def shuffle_csv(input_file, output_file):
+    from csv import writer, reader
+    from random import shuffle
+
+    results = []
+    
+    # read csv to array
+    with open(input_file) as csvfile:
+        reader = reader(csvfile)
+        for row in reader: # each row is a list
+            results.append(row)
+
+    print("length on read: ", len(results))
+
+    # shuffle
+    to_shuffle = results #skip row info
+    shuffle(to_shuffle)
+
+    results = to_shuffle
+    print("length after shuffle: ", len(results))
+
+    #assign ids
+    for idx, row in enumerate(results):
+        row.insert(0, idx)
+    
+    # add "id" column
+    print(results[0])
+    results.insert(0, ["id", "word", "label"]) 
+    print(results[1])
+    print("length with id column: ", len(results))
+
+    #write 
+    with open('dataset/'+output_file, 'w', newline='') as csvfile:
+        cwriter = writer(csvfile)
+        #for w in results:
+         #   cwriter.writerow(w)
+        cwriter.writerows(results)
+# %%
 if __name__ == "__main__":
-    wordlist = subset_of_csv("words.csv", 600)
-    words_to_imgs(wordlist[:5], "fonty/Lato-Regular.ttf", "Lato", "testowe.csv")
+    sub = subset_of_csv("words.csv", 600)
+    lato=sub[:200]
+    sans=sub[200:400]
+    serif=sub[400:]
+    print(lato[-5:], sans[:5], sans[-5:], serif[:5], serif[-5:], sub[-5:])
+    print(len(lato)==len(serif)==len(sans)==200)
+
+    words_to_imgs(lato, "fonty/Lato-Regular.ttf", "Lato-Regular", "testowe.csv")
+    words_to_imgs(sans, "fonty/LiberationSans-Regular.ttf", "LiberationSans-Regular", "testowe.csv")
+    words_to_imgs(serif, "fonty/LiberationSerif-Regular.ttf", "LiberationSerif-Regular", "testowe.csv")
+    
+    shuffle_csv('testowe.csv', 'dataset.csv')
+
+
+# %%
