@@ -27,7 +27,7 @@ def words_to_imgs(wordlist=['raz', 'dwa', 'trzy'], font='', label='', csv_name='
 	
     field_names = ['Word','Label']
     
-
+    
     for word in wordlist:
         row_dict = {'Word': word, 'Label': label}
         append_dict_as_row(csv_name, row_dict, field_names)
@@ -43,4 +43,3 @@ def words_to_imgs(wordlist=['raz', 'dwa', 'trzy'], font='', label='', csv_name='
 if __name__ == "__main__":
     wordlist = subset_of_csv("words.csv", 600)
     words_to_imgs(wordlist[:5], "fonty/Lato-Regular.ttf", "Lato", "testowe.csv")
-    
