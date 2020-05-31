@@ -4,5 +4,3 @@ text_reader.py
 __pycache__/
 .vscode/
 test_reader.py
-dataset/*
-testowe.csv
