@@ -32,7 +32,7 @@ with open("dataset/dataset.csv") as csvfile:
     for row in r:
         list_of_rows.append(row)
 
-# print(l[:5], l[-5:], len(l)) # test
+# print(l[:5], l[-5:], len(l)) # testgi
 #%%
 for row in list_of_rows:
     list_of_images.append(Img(row))
