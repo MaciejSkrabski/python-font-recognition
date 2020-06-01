@@ -5,4 +5,5 @@ __pycache__/
 .vscode/
 test_reader.py
 dataset/*
+dataset/dataset.csv
 testowe.csv
