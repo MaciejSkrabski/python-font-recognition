@@ -9,7 +9,7 @@ class Img:
             # loading image to numpy array
             pic = Image.open("dataset/"+word+".jpg")
             pix = pic.getdata(0)
-            return np.array(pix)/255 # converting to float in range [0, 1]
+            return np.asarray(pix)/255 # converting to float in range [0, 1]
     
         # the object has id, a word depicted on it's image, a label
         # with the font used to write the word on the image and data,
@@ -59,6 +59,8 @@ for obj in list_of_images:
 print(list_of_images[0].data.shape)
 X = np.asarray(X)
 print(X.shape)
+y = np.asarray(y)
+print(y.shape)
 
 # %%
 
