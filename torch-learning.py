@@ -5,9 +5,10 @@ import torch
 import torchvision
 import sys
 from csv import reader
+from matplotlib import pyplot as plt
 
-
-print("CUDA available?", torch.cuda.is_available())
+is_cuda = torch.cuda.is_available()
+print("CUDA available?", is_cuda)
 
 
 class Img:
@@ -36,33 +37,34 @@ class Img:
 # %%
 
 
-list_of_images = []
-list_of_rows = []
+images = []
+rows = []
 with open("dataset/dataset.csv") as csvfile:
     r = reader(csvfile)
     next(r)
     for row in r:
-        list_of_rows.append(row)
+        rows.append(row)
 
+for row in rows[:200]:
+    images.append(Img(row))
+# test
+row = images[0]
+row2 = images[50]
 # print(l[:5], l[-5:], len(l)) # test
 # %%
 
 
-for row in list_of_rows[:3]:
-    list_of_images.append(Img(row))
-# test
-row = list_of_images[0]
-row2 = list_of_images[2]
 print(row2.id, row2.word, row2.label, "\n", row2.data)
 
 print("\n\n", np.shape(row2.to_numpy()))
 
-# np.savetxt(sys.stdout, (row2.to_numpy())[:1], '%.001e')
-
-# for idx, val in enumerate(row.data):
-#     for inner, oy in enumerate(val):
-#         if oy!=1:
-#             print(idx, inner, oy)
+# display example images from dataset
+plt.figure(figsize=(5, 5))
+plt.subplot(221), plt.imshow(row.to_numpy(), cmap='gray')
+plt.subplot(222), plt.imshow(row2.to_numpy(), cmap='gray')
+plt.subplot(223), plt.imshow(images[100].to_numpy(), cmap='gray')
+plt.subplot(224), plt.imshow(images[150].to_numpy(), cmap='gray')
+plt.show()
 
 
 # %%
