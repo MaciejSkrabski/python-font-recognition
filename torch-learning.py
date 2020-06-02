@@ -2,7 +2,6 @@
 from PIL import Image
 import numpy as np
 import torch
-import torchvision
 
 from csv import reader
 from matplotlib import pyplot as plt
@@ -100,7 +99,7 @@ def unison_shuffled_copies(a, b):
 
 split = int(np.round(len(X)*.8))
 X_train, X_test, y_train, y_test = X[:split], X[split:], y[:split], y[split:]
-# simultanous shuffling of two arrays
+# simultaneous shuffling of two arrays
 X_train, y_train = unison_shuffled_copies(X_train, y_train)
 
 # conversion to torch tensor
@@ -109,3 +108,4 @@ y_train = torch.from_numpy(y_train)
 X_test = torch.from_numpy(X_test)
 y_test = torch.from_numpy(y_test)
 # %%
+# defining cnn
