@@ -7,15 +7,7 @@ from PIL import Image
 from sklearn import svm
 from sklearn.model_selection import train_test_split, RandomizedSearchCV
 from sklearn.model_selection import GridSearchCV
-from skimage.feature import hog
-from skimage.color import rgb2grey
-
-from sklearn.metrics import accuracy_score
-from sklearn.preprocessing import StandardScaler
-from sklearn.decomposition import PCA
 from sklearn.svm import SVC
-
-from sklearn.metrics import roc_curve, auc
 
 
 class Img:
@@ -46,15 +38,10 @@ with open("dataset/dataset.csv") as csvfile:
     for row in r:
         list_of_rows.append(row)
 
-# print(l[:5], l[-5:], len(l)) # testgi
 # %%
 for row in list_of_rows:
     list_of_images.append(Img(row))
-# test
-row = list_of_images[0]
-row2 = list_of_images[599]
-# print(row.id, row.word, row.label, row.data, row.data.shape)
-# print(row2.id, row2.word, row2.label, row2.data, row2.data.shape)
+
 # %%
 X = []
 y = []
@@ -69,42 +56,43 @@ for obj in list_of_images:
     else:
         print("SUM TING WONG!", obj.label)
         break
-print(list_of_images[0].data.shape)
 X = np.asarray(X)
-print(X.shape)
-x_train, x_test, y_train, y_test = train_test_split(X, y, train_size=0.7, test_size=0.3, random_state=2)
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.1, random_state=2)
 
-print("test2")
+# do sprawdzania dla pojedynczego jadra linear
+# model = svm.SVC(kernel='linear', C=10).fit(X_train,
+#                                             y_train)
 
-# nsamples, nx, ny = y_train.
+# do sprawdzenia dla rbf
+# model = svm.SVC(kernel='rbf', gamma=0.7, C=10).fit(X_train,
+#                                                   y_train)
 
-# nsamples, nx, ny = train_dataset.shape
-# d2_train_dataset = train_dataset.reshape((nsamples,nx*ny))
+# do sprawdzenia dla poly
+# model = svm.SVC(kernel='poly', degree=5, gamma=0.03, C=0.1).fit(X_train,
+#                                                                  y_train)
+
+# wypisanie dokladnosci na zbiorze testowym
+# print(model.score(X_test, y_test))
 
 parameters = {'kernel': ('linear', 'rbf', 'poly'),
-              'C': [1, 100],  # [1,10,100,1000],
-              'gamma': [0.001,0.01,1,10],  # [2**-5,5],
-              'degree': [1,2,3]}  # [2**-5,5]}
+              'C': [0.1, 1, 10, 100],
+              'gamma': [2**-5, 5],
+              'degree': [2, 3, 4, 5]}
 
 svc = svm.SVC()
+grid_search_cv = GridSearchCV(svc, parameters, cv=4)
+grid_search_cv.fit(X_train, y_train)
 
-print("\n\n")
+print("GridSearchCV:")
+print(" Najlepsze parametry: ", grid_search_cv.best_params_)
+print(" Sredni wynik kross-walidacji:", grid_search_cv.best_score_)
+print(" Dokladnosc na zbiorze testowym:", grid_search_cv.score(X_test, y_test))
+print("\n")
 
-# grid_search_cv = GridSearchCV(svc, parameters, cv = 4)
-# grid_search_cv.fit(x_train, y_train)
-# print("test3")
-# print("GridSearchCV:")
-# print("Najlepsze: ", grid_search_cv.best_params_)
-# print("Najlepsze parametry: ", grid_search_cv.best_params_)
-# print("Dokladnosc klasyfikacji dla zbioru treningowego:", grid_search_cv.best_score_)
-# print("Dokladnosc klasyfikacji dla zbioru testowego:", grid_search_cv.score(x_test,y_test))
-#
-# print("\n\n")
-#
-randomized_search_cv = RandomizedSearchCV(svc, parameters, cv=4)
-randomized_search_cv.fit(x_train, y_train)
+randomized_search_cv = RandomizedSearchCV(svc, parameters, cv=4, random_state=3)
+randomized_search_cv.fit(X_train, y_train)
 
 print("RandomizedSearchCV:")
-# print("Najlepsze parametry: ", randomized_search_cv.best_params_)
-# print("Dokladnosc klasyfikacji dla zbioru treningowego:", randomized_search_cv.best_score_)
-# print("Dokladnosc klasyfikacji dla zbioru testowego:", randomized_search_cv.score(x_test, y_test))
+print(" Najlepsze parametry: ", randomized_search_cv.best_params_)
+print(" Sredni wynik kross-walidacji:", randomized_search_cv.best_score_)
+print(" Dokladnosc na zbiorze testowym:", randomized_search_cv.score(X_test, y_test))
