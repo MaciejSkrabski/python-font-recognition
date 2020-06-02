@@ -104,8 +104,10 @@ def unison_shuffled_copies(a, b):
 split = int(np.round(len(X)*.8))
 X_test, y_test = X[split:], y[split:]
 X_t, y_t = X[:split], y[:split]
+split = int(np.round(split*.8))
 X_train, y_train = X_t[:split], y_t[:split]
 X_valid, y_valid = X_t[split:], y_t[split:]
+
 # simultaneous shuffling of two arrays
 X_train, y_train = unison_shuffled_copies(X_train, y_train)
 
@@ -169,6 +171,7 @@ else:
     device = torch.device("cpu")
 model.to(device)
 print(device)
+xb = xb.view(bs, 1, 80, 300)
 model(xb)
 
 # %%
