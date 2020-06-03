@@ -107,10 +107,8 @@ def unison_shuffled_copies(a, b):
 
 split = int(np.round(len(X)*.8))
 X_test, y_test = X[split:], y[split:]
-X_t, y_t = X[:split], y[:split]
-split = int(np.round(split*.8))
-X_train, y_train = X_t[:split], y_t[:split]
-X_valid, y_valid = X_t[split:], y_t[split:]
+X_train, y_train = X[:split], y[:split]
+
 
 # simultaneous shuffling of two arrays
 X_train, y_train = unison_shuffled_copies(X_train, y_train)
@@ -119,10 +117,6 @@ X_train, y_train = unison_shuffled_copies(X_train, y_train)
 # training set
 X_train = torch.from_numpy(X_train)
 y_train = torch.from_numpy(y_train)
-
-# validation set
-X_valid = torch.from_numpy(X_valid)
-y_valid = torch.from_numpy(y_valid)
 
 # testing set
 X_test = torch.from_numpy(X_test)
@@ -162,17 +156,15 @@ class Font_CNN(nn.Module):
         xb = self.pooling(xb)  # wymiary/2
         xb = F.relu(self.conv2(xb))  # wymiary pozostały niezmienne
         xb = self.pooling(xb)  # wymiary/2
-
-        print(xb.shape)
         # "spłaszczenie" danych przed wejściem do warstw w pełni połączonych
         xb = xb.view(-1, 18*20*75)
-        # print(xb.shape)
+
         xb = self.fc(xb)  # fully connected - zlinearyzowanie pod etykiety
 
         return xb
 
 
-bs = 24  # batch size
+bs = 5  # batch size
 
 xb = X_train[0:bs]  # a mini-batch from x
 xb = xb.view(bs, 1, 80, 300)  # batch size, dim, h, w
@@ -182,15 +174,11 @@ xb = xb.view(bs, 1, 80, 300)  # batch size, dim, h, w
 model = Font_CNN()
 
 model.to(device)
-pred = model(xb.to(device))
-print(pred.shape)
-print(pred)
-
 
 # %%
 
 # funkcja spadku
-loss = nn.CrossEntropyLoss()
+loss = nn.MSELoss()
 
 # Optymalizator będzie propagował błąd podczas procesu uczenia.
 # Potrzebne są mu do tego parametry modelu,
@@ -206,31 +194,34 @@ for epoch in range(n_epochs):
     # startujemy od wartości
     # funkcji kosztu wynoszącej 0
     # shuffle data every epoch!!!
+    xs, ys = unison_shuffled_copies(X_train, y_train)
     cumulative_loss = 0.0
+    batch = 5
     j = 0
-
-    for i, data in enumerate(X_train, 0): 
-        print(data[0])
-        # przenosimy dane na kartę graficzną, jeśli to możliwe
-        inputs, labels = data[0].to(device), data[1].to(device)
-
-        # Zerujemy gradienty
+    while (j*batch <= all_elems-batch):
+        inputs, labels = xs[
+            j*batch:(j+1)*batch
+            ].to(device), ys[
+                j*batch:(j+1)*batch
+                ].to(device)
+        inputs = inputs.view(batch, 1, 80, 300)
+        
         optimizer.zero_grad()
-
-        # Wczytujemy dane do modelu
         outputs = model(inputs)
-        # Wyliczamy wartość funkcji kosztu,
-        # czyli porównujemy wyjście z sieci z etykietami
-        loss_value = loss(outputs, labels)
-        # Dokonujemy propagacji błędu i optymalizujemy parametry
+
+        loss_value = loss(outputs.double(), labels)
         loss_value.backward()
         optimizer.step()
-        
-        # Drukujemy cząstkowe wyniki co 2000 mini-paczek
         cumulative_loss += loss_value.item()
-        if i % 2000 == 1999:
-            print('Epoka: {}, {}, wartość funkcji kosztu: {:.3f}'.format(epoch + 1, i + 1, cumulative_loss / 2000))
-            cumulative_loss = 0.0
+        if j % 100 == 99:
+            print(
+                'Epoka: {}, {}, wartość funkcji kosztu: {:.3f}'.
+                format(epoch + 1,
+                       j + 1,
+                       cumulative_loss / 2000
+                       ))
+        j += 1
+
 
 print('Uczenie zakończone')
 
