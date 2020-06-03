@@ -1,13 +1,11 @@
 # %%
-
-import pandas as pd
 import numpy as np
-
+from csv import reader
 from PIL import Image
 from sklearn import svm
 from sklearn.model_selection import train_test_split, RandomizedSearchCV
 from sklearn.model_selection import GridSearchCV
-from sklearn.svm import SVC
+from time import time
 
 
 class Img:
@@ -28,8 +26,6 @@ class Img:
 
 
 # %%
-from csv import reader
-
 list_of_images = []
 list_of_rows = []
 with open("dataset/dataset.csv") as csvfile:
@@ -57,7 +53,11 @@ for obj in list_of_images:
         print("SUM TING WONG!", obj.label)
         break
 X = np.asarray(X)
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.1, random_state=2)
+print("split data")
+X_train, X_test, y_train, y_test = train_test_split(X,
+                                                    y,
+                                                    test_size=0.2,
+                                                    random_state=2)
 
 # do sprawdzania dla pojedynczego jadra linear
 # model = svm.SVC(kernel='linear', C=10).fit(X_train,
@@ -78,21 +78,30 @@ parameters = {'kernel': ('linear', 'rbf', 'poly'),
               'C': [0.1, 1, 10, 100],
               'gamma': [2**-5, 5],
               'degree': [2, 3, 4, 5]}
-
+print("svc")
 svc = svm.SVC()
-grid_search_cv = GridSearchCV(svc, parameters, cv=4)
+print("grid search, wielowątkowo - czas start")
+start = time()
+grid_search_cv = GridSearchCV(svc, parameters, cv=4, n_jobs=-2)
 grid_search_cv.fit(X_train, y_train)
-
+elapsed = time() - start
 print("GridSearchCV:")
 print(" Najlepsze parametry: ", grid_search_cv.best_params_)
 print(" Sredni wynik kross-walidacji:", grid_search_cv.best_score_)
 print(" Dokladnosc na zbiorze testowym:", grid_search_cv.score(X_test, y_test))
+print(" Klasyfikator nauczono w czasie ", elapsed)
 print("\n")
-
-randomized_search_cv = RandomizedSearchCV(svc, parameters, cv=4, random_state=3)
+print("randomized search cv")
+randomized_search_cv = RandomizedSearchCV(svc, parameters,
+                                          cv=4, random_state=3)
+print("randomized search cv fit, rozpoczęcie uczenia - czas start")
+start = time()
 randomized_search_cv.fit(X_train, y_train)
-
+elapsed = time() - start
 print("RandomizedSearchCV:")
 print(" Najlepsze parametry: ", randomized_search_cv.best_params_)
 print(" Sredni wynik kross-walidacji:", randomized_search_cv.best_score_)
-print(" Dokladnosc na zbiorze testowym:", randomized_search_cv.score(X_test, y_test))
+print(" Dokladnosc na zbiorze testowym:", randomized_search_cv.score(
+                                                                     X_test,
+                                                                     y_test))
+print(" Klasyfikator nauczono w czasie", elapsed)

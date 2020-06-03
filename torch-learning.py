@@ -7,6 +7,7 @@ from matplotlib import pyplot as plt
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
+from time import time
 
 torch.manual_seed(2)
 
@@ -97,7 +98,7 @@ y = np.asarray(y)
 # %%
 
 
-# podział na zbiór testowy i treningowy
+# split into training and testing sets
 def unison_shuffled_copies(a, b):
     assert len(a) == len(b)
     np.random.seed(2)  # freezing seed for predictability
@@ -165,10 +166,7 @@ class Font_CNN(nn.Module):
 
 
 # %%
-bs = 5  # batch size
 
-xb = X_train[0:bs]  # a mini-batch from x
-xb = xb.view(bs, 1, 80, 300)  # batch size, dim, h, w
 # Tworzymy obiekt klasy CNN2D i jeśli to możliwe,
 # przenosimy go na kartę graficzną (możliwe tylko dla kart
 # wspierających obliczenia CUDA!)
@@ -185,10 +183,12 @@ loss = nn.CrossEntropyLoss()
 # a także współczynnik uczenia, który ustawiamy na 0.001
 optimizer = optim.Adam(model.parameters(), lr=0.001)
 
-n_epochs = 15
+n_epochs = 12
 all_elems = len(X_train)
 
-
+# rozpoczęcie uczenia
+print("rozpoczęcie uczenia - czas start")
+start = time()
 for epoch in range(n_epochs):
     # startujemy od wartości
     # funkcji kosztu wynoszącej 0
@@ -212,7 +212,7 @@ for epoch in range(n_epochs):
         loss_value.backward()
         optimizer.step()
         cumulative_loss += loss_value.item()
-        if j % 10 == 9:
+        if j % 20 == 19:
             print(
                 'Epoka: {}, {}, wartość funkcji kosztu: {:.3f}'.
                 format(epoch + 1,
@@ -222,7 +222,7 @@ for epoch in range(n_epochs):
         j += 1
 
 
-print('Uczenie zakończone')
+print('Uczenie zakończone w czasie ', time()-start)
 
 # %%
 # zapis do pliku
@@ -236,6 +236,8 @@ model.load_state_dict(torch.load('./Fonts_CNN.pth'))
 
 correct_number, total_number = 0, 0
 class_correct, class_total = np.zeros(3), np.zeros(3)
+print("Sprawdzenie zgodności ze zbiorem testowym - czas start")
+start = time()
 with torch.no_grad():
     batch = 5
     j = 0
@@ -271,7 +273,7 @@ with torch.no_grad():
             class_total[label] += 1
 
         j += 1
-
+elapsed = time()-start
 print('Dokładność klasyfikacji na {} egzemplarzach zbioru testowego wynosi: '
       '{:.2f}%'.format(test_elems, 100.0 * correct_number / total_number))
 classes = ("Lato-Regular", "LiberationSans-Regular", "LiberationSerif-Regular")
@@ -280,3 +282,4 @@ for i in range(3):
         'Dokładność klasyfikacji dla klasy {} \
 wynosi {:.2f}%.'.format(classes[i],
                         100.0 * class_correct[i] / class_total[i]))
+print("Zgodność ze zbiorem testowym sprawdzono w czasie ", elapsed)
