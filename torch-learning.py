@@ -224,6 +224,7 @@ for epoch in range(n_epochs):
 
 print('Uczenie zakończone w czasie ', time()-start)
 
+
 # %%
 # zapis do pliku
 torch.save(model.state_dict(), './Fonts_CNN.pth')
