@@ -178,7 +178,7 @@ model.to(device)
 # %%
 
 # funkcja spadku
-loss = nn.MSELoss()
+loss = nn.CrossEntropyLoss()
 
 # Optymalizator będzie propagował błąd podczas procesu uczenia.
 # Potrzebne są mu do tego parametry modelu,
@@ -208,8 +208,8 @@ for epoch in range(n_epochs):
         
         optimizer.zero_grad()
         outputs = model(inputs)
-
-        loss_value = loss(outputs.double(), labels)
+        print(torch.max(labels, 1)[1])
+        loss_value = loss(outputs, torch.max(labels, 1)[1])
         loss_value.backward()
         optimizer.step()
         cumulative_loss += loss_value.item()
@@ -226,3 +226,53 @@ for epoch in range(n_epochs):
 print('Uczenie zakończone')
 
 # %%
+# zapis do pliku
+torch.save(model.state_dict(), './Fonts_CNN.pth')
+
+
+# %%
+model = Font_CNN().to(device)
+model.load_state_dict(torch.load('./Fonts_CNN.pth'))
+
+
+# %%
+
+correct_number, total_number = 0, 0
+class_correct, class_total = np.zeros(10), np.zeros(10)
+
+# Teraz już nie będziemy trenować sieci
+with torch.no_grad():
+    # Dla danych ze zbioru testowego
+    for data in X_test:
+        # Wczytujemy obrazy z batcha i odpowiadające im etykiety
+        images, labels = data
+        # Sprawdzamy, co powie nasz model na otrzymane obrazki
+        outputs = model(images)
+        # Output naszej sieci to tak naprawdę prawdopodobieństwa, że dany obrazek należy do pewnej klasy. Sprawdźmy
+        # początkowo, która klasa uzyskała największe prawdopodobieństwo.
+        _, prediction = torch.max(outputs, 1)
+        # Sprawdzamy liczbę ogólnie poprawnie zaklasyfikowanych obrazków oraz dla danej kategorii.
+        total_number += labels.size(0)
+        # Sprawdzamy, gdzie predykcja zgadza się z etykietami
+        check_prediction = (prediction == labels)
+        # Sumujemy te przypadki.
+        correct_number += check_prediction.sum().item()
+        # Dokonujemy spłaszczenia wektora.
+        check_prediction = check_prediction.squeeze()
+        
+        # Dla każdego obrazu z batcha (którego rozmiar ustawiliśmy na 5):
+        for i in range(5):
+            # Sprawdźmy jego etykietę.
+            label = labels[i]
+            # Jeżeli sieć dobrze przewidziała wynik, liczba prawidłowo zaklasyfikowanych przypadków
+            # tej kategorii wzrośnie o 1, w przeciwnym wypadku o 0.
+            class_correct[label] += check_prediction[i].item()
+            # Wczytaliśmy jeden przypadek danej klasy, więc dodajemy go do ogólnego wyniku.
+            class_total[label] += 1
+
+print('Dokładność klasyfikacji na 10000 egzemplarzach zbioru testowego wynosi: '
+      '{}%'.format(100.0 * correct_number / total_number))
+
+for i in range(10):
+    print('Dokładność klasyfikacji dla klasy {} wynosi {}%.'.format(classes[i],
+                                                                     100.0 * class_correct[i] / class_total[i]))
