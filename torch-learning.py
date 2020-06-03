@@ -249,7 +249,7 @@ with torch.no_grad():
         inputs = inputs.view(batch, 1, 80, 300)
 
         outputs = model(inputs)
-        prediction = torch.max(outputs, 1)[1]  # 
+        prediction = torch.max(outputs, 1)[1]
         total_number += labels.size(0)
 
         check_prediction = (prediction == labels)
