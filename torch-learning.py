@@ -9,8 +9,12 @@ import torch.nn.functional as F
 import torch.optim as optim
 
 torch.manual_seed(2)
-is_cuda = torch.cuda.is_available()
-print("CUDA available?", is_cuda)
+
+if torch.cuda.is_available():
+    device = torch.device("cuda:0")
+else:
+    device = torch.device("cpu")
+print(device)
 
 
 class Img:
@@ -146,33 +150,41 @@ y_test = torch.from_numpy(y_test)
 class Font_CNN(nn.Module):
     def __init__(self):
         super().__init__()
-        self.conv1 = nn.Conv2d(1, 6, kernel_size=3, stride=1, padding=1)
-        self.conv2 = nn.Conv2d(6, 6, kernel_size=3, stride=1, padding=1)
-        self.conv3 = nn.Conv2d(6, 3, kernel_size=3, stride=1, padding=1)
+        self.conv1 = nn.Conv2d(1, 8, kernel_size=3, stride=1, padding=1)
+        self.conv2 = nn.Conv2d(8, 18, kernel_size=3, stride=1, padding=1)
+
+        self.pooling = nn.MaxPool2d(2, 2)
+
+        self.fc = nn.Linear(18*20*75, 3)
 
     def forward(self, xb):
-        # xb = xb.view(-1, 1, 28, 28)
-        xb = F.relu(self.conv1(xb))
-        xb = F.relu(self.conv2(xb))
-        xb = F.relu(self.conv3(xb))
-        xb = F.avg_pool2d(xb, 3)
+        xb = F.relu(self.conv1(xb))  # wymiary pozostały niezmienne
+        xb = self.pooling(xb)  # wymiary/2
+        xb = F.relu(self.conv2(xb))  # wymiary pozostały niezmienne
+        xb = self.pooling(xb)  # wymiary/2
+
+        print(xb.shape)
+        # "spłaszczenie" danych przed wejściem do warstw w pełni połączonych
+        xb = xb.view(-1, 18*20*75)
+        # print(xb.shape)
+        xb = self.fc(xb)  # fully connected - zlinearyzowanie pod etykiety
+
         return xb
 
-bs = 64  # batch size
+
+bs = 5  # batch size
 
 xb = X_train[0:bs]  # a mini-batch from x
+xb = xb.view(bs, 1, 80, 300)  # batch size, dim, h, w
 # Tworzymy obiekt klasy CNN2D i jeśli to możliwe,
 # przenosimy go na kartę graficzną (możliwe tylko dla kart
 # wspierających obliczenia CUDA!)
 model = Font_CNN()
-if torch.cuda.is_available():
-    device = torch.device("cuda:0")
-else:
-    device = torch.device("cpu")
+
 model.to(device)
-print(device)
-xb = xb.view(bs, 1, 80, 300)
-model(xb)
+pred = model(xb.to(device))
+print(pred.shape)
+
 
 # %%
 
@@ -185,36 +197,36 @@ loss = nn.CrossEntropyLoss()
 optimizer = optim.Adam(model.parameters(), lr=0.001)
 
 # %%
-n_epochs = 5
+# n_epochs = 5
 
-for epoch in range(n_epochs):
-    # startujemy od wartości
-    # funkcji kosztu wynoszącej 0
-    cumulative_loss = 0.0
+# for epoch in range(n_epochs):
+#     # startujemy od wartości
+#     # funkcji kosztu wynoszącej 0
+#     cumulative_loss = 0.0
 
-    for i, data in enumerate(X_train, 0):
-        print(data[0])
-        # przenosimy dane na kartę graficzną, jeśli to możliwe
-        inputs, labels = data[0].to(device), data[1].to(device)
+#     for i, data in enumerate(X_train, 0):
+#         print(data[0])
+#         # przenosimy dane na kartę graficzną, jeśli to możliwe
+#         inputs, labels = data[0].to(device), data[1].to(device)
 
-        # Zerujemy gradienty
-        optimizer.zero_grad()
+#         # Zerujemy gradienty
+#         optimizer.zero_grad()
 
-        # Wczytujemy dane do modelu
-        outputs = model(inputs)
-        # Wyliczamy wartość funkcji kosztu,
-        # czyli porównujemy wyjście z sieci z etykietami
-        loss_value = loss(outputs, labels)
-        # Dokonujemy propagacji błędu i optymalizujemy parametry
-        loss_value.backward()
-        optimizer.step()
+#         # Wczytujemy dane do modelu
+#         outputs = model(inputs)
+#         # Wyliczamy wartość funkcji kosztu,
+#         # czyli porównujemy wyjście z sieci z etykietami
+#         loss_value = loss(outputs, labels)
+#         # Dokonujemy propagacji błędu i optymalizujemy parametry
+#         loss_value.backward()
+#         optimizer.step()
         
-        # Drukujemy cząstkowe wyniki co 2000 mini-paczek
-        cumulative_loss += loss_value.item()
-        if i % 2000 == 1999:
-            print('Epoka: {}, {}, wartość funkcji kosztu: {:.3f}'.format(epoch + 1, i + 1, cumulative_loss / 2000))
-            cumulative_loss = 0.0
+#         # Drukujemy cząstkowe wyniki co 2000 mini-paczek
+#         cumulative_loss += loss_value.item()
+#         if i % 2000 == 1999:
+#             print('Epoka: {}, {}, wartość funkcji kosztu: {:.3f}'.format(epoch + 1, i + 1, cumulative_loss / 2000))
+#             cumulative_loss = 0.0
 
-print('Uczenie zakończone')
+# print('Uczenie zakończone')
 
 # %%
