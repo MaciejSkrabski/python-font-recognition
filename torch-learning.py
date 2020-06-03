@@ -155,7 +155,7 @@ class Font_CNN(nn.Module):
 
         self.pooling = nn.MaxPool2d(2, 2)
 
-        self.fc = nn.Linear(18*20*75, 3)
+        self.fc = nn.Linear(18*20*75, 3)  # zwykły iloczyn wymiarów
 
     def forward(self, xb):
         xb = F.relu(self.conv1(xb))  # wymiary pozostały niezmienne
@@ -172,7 +172,7 @@ class Font_CNN(nn.Module):
         return xb
 
 
-bs = 5  # batch size
+bs = 24  # batch size
 
 xb = X_train[0:bs]  # a mini-batch from x
 xb = xb.view(bs, 1, 80, 300)  # batch size, dim, h, w
@@ -184,6 +184,7 @@ model = Font_CNN()
 model.to(device)
 pred = model(xb.to(device))
 print(pred.shape)
+print(pred)
 
 
 # %%
@@ -197,36 +198,40 @@ loss = nn.CrossEntropyLoss()
 optimizer = optim.Adam(model.parameters(), lr=0.001)
 
 # %%
-# n_epochs = 5
+n_epochs = 5
+all_elems = len(X_train)
 
-# for epoch in range(n_epochs):
-#     # startujemy od wartości
-#     # funkcji kosztu wynoszącej 0
-#     cumulative_loss = 0.0
 
-#     for i, data in enumerate(X_train, 0):
-#         print(data[0])
-#         # przenosimy dane na kartę graficzną, jeśli to możliwe
-#         inputs, labels = data[0].to(device), data[1].to(device)
+for epoch in range(n_epochs):
+    # startujemy od wartości
+    # funkcji kosztu wynoszącej 0
+    # shuffle data every epoch!!!
+    cumulative_loss = 0.0
+    j = 0
 
-#         # Zerujemy gradienty
-#         optimizer.zero_grad()
+    for i, data in enumerate(X_train, 0): 
+        print(data[0])
+        # przenosimy dane na kartę graficzną, jeśli to możliwe
+        inputs, labels = data[0].to(device), data[1].to(device)
 
-#         # Wczytujemy dane do modelu
-#         outputs = model(inputs)
-#         # Wyliczamy wartość funkcji kosztu,
-#         # czyli porównujemy wyjście z sieci z etykietami
-#         loss_value = loss(outputs, labels)
-#         # Dokonujemy propagacji błędu i optymalizujemy parametry
-#         loss_value.backward()
-#         optimizer.step()
+        # Zerujemy gradienty
+        optimizer.zero_grad()
+
+        # Wczytujemy dane do modelu
+        outputs = model(inputs)
+        # Wyliczamy wartość funkcji kosztu,
+        # czyli porównujemy wyjście z sieci z etykietami
+        loss_value = loss(outputs, labels)
+        # Dokonujemy propagacji błędu i optymalizujemy parametry
+        loss_value.backward()
+        optimizer.step()
         
-#         # Drukujemy cząstkowe wyniki co 2000 mini-paczek
-#         cumulative_loss += loss_value.item()
-#         if i % 2000 == 1999:
-#             print('Epoka: {}, {}, wartość funkcji kosztu: {:.3f}'.format(epoch + 1, i + 1, cumulative_loss / 2000))
-#             cumulative_loss = 0.0
+        # Drukujemy cząstkowe wyniki co 2000 mini-paczek
+        cumulative_loss += loss_value.item()
+        if i % 2000 == 1999:
+            print('Epoka: {}, {}, wartość funkcji kosztu: {:.3f}'.format(epoch + 1, i + 1, cumulative_loss / 2000))
+            cumulative_loss = 0.0
 
-# print('Uczenie zakończone')
+print('Uczenie zakończone')
 
 # %%
