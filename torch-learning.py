@@ -163,6 +163,7 @@ class Font_CNN(nn.Module):
 
         return xb
 
+
 # %%
 bs = 5  # batch size
 
@@ -184,7 +185,7 @@ loss = nn.CrossEntropyLoss()
 # a także współczynnik uczenia, który ustawiamy na 0.001
 optimizer = optim.Adam(model.parameters(), lr=0.001)
 
-n_epochs = 10
+n_epochs = 15
 all_elems = len(X_train)
 
 
@@ -208,11 +209,10 @@ for epoch in range(n_epochs):
         outputs = model(inputs)
 
         loss_value = loss(outputs, torch.max(labels, 1)[1])
-        print(torch.max(labels, 1)[1])
         loss_value.backward()
         optimizer.step()
         cumulative_loss += loss_value.item()
-        if j % 5 == 4:
+        if j % 10 == 9:
             print(
                 'Epoka: {}, {}, wartość funkcji kosztu: {:.3f}'.
                 format(epoch + 1,
