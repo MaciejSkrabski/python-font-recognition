@@ -163,7 +163,7 @@ class Font_CNN(nn.Module):
 
         return xb
 
-
+# %%
 bs = 5  # batch size
 
 xb = X_train[0:bs]  # a mini-batch from x
@@ -175,7 +175,6 @@ model = Font_CNN()
 
 model.to(device)
 
-# %%
 
 # funkcja spadku
 loss = nn.CrossEntropyLoss()
@@ -185,8 +184,7 @@ loss = nn.CrossEntropyLoss()
 # a także współczynnik uczenia, który ustawiamy na 0.001
 optimizer = optim.Adam(model.parameters(), lr=0.001)
 
-# %%
-n_epochs = 8
+n_epochs = 10
 all_elems = len(X_train)
 
 
@@ -208,8 +206,9 @@ for epoch in range(n_epochs):
 
         optimizer.zero_grad()
         outputs = model(inputs)
-        
+
         loss_value = loss(outputs, torch.max(labels, 1)[1])
+        print(torch.max(labels, 1)[1])
         loss_value.backward()
         optimizer.step()
         cumulative_loss += loss_value.item()
@@ -235,4 +234,28 @@ model = Font_CNN().to(device)
 model.load_state_dict(torch.load('./Fonts_CNN.pth'))
 
 
+correct_number, total_number = 0, 0
+with torch.no_grad():
+    batch = 5
+    j = 0
+    test_elems = len(X_test)
+    while (j*batch <= test_elems-batch):
+        inputs, labels = X_test[
+            j*batch:(j+1)*batch
+            ].to(device), y_test[
+                j*batch:(j+1)*batch
+                ].to(device)
+        inputs = inputs.view(batch, 1, 80, 300)
+
+        outputs = model(inputs)
+        prediction = torch.max(outputs, 1)  # [1]
+        total_number += labels.size(0)
+
+        check_prediction = (prediction[1] == torch.max(labels, 1)[1])
+        print(check_prediction)
+
+        
+        # print(j)
+
+        j+=1
 # %%
