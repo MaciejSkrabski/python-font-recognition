@@ -235,6 +235,7 @@ model.load_state_dict(torch.load('./Fonts_CNN.pth'))
 
 
 correct_number, total_number = 0, 0
+class_correct, class_total = np.zeros(3), np.zeros(3)
 with torch.no_grad():
     batch = 5
     j = 0
@@ -242,20 +243,40 @@ with torch.no_grad():
     while (j*batch <= test_elems-batch):
         inputs, labels = X_test[
             j*batch:(j+1)*batch
-            ].to(device), y_test[
+            ].to(device), torch.max(y_test[
                 j*batch:(j+1)*batch
-                ].to(device)
+                ].to(device), 1)[1]
         inputs = inputs.view(batch, 1, 80, 300)
 
         outputs = model(inputs)
-        prediction = torch.max(outputs, 1)  # [1]
+        prediction = torch.max(outputs, 1)[1]  # 
         total_number += labels.size(0)
 
-        check_prediction = (prediction[1] == torch.max(labels, 1)[1])
-        print(check_prediction)
+        check_prediction = (prediction == labels)
+        # print(prediction, labels, "\n\n")
 
-        
-        # print(j)
+        correct_number += check_prediction.sum().item()
+        # Dokonujemy spłaszczenia wektora.
+        check_prediction = check_prediction.squeeze()
 
-        j+=1
-# %%
+        for i in range(5):
+            # Sprawdźmy jego etykietę.
+            label = labels[i]
+            # Jeżeli sieć dobrze przewidziała wynik, liczba prawidłowo
+            # zaklasyfikowanych przypadków tej kategorii wzrośnie o 1,
+            # w przeciwnym wypadku o 0.
+            class_correct[label] += check_prediction[i].item()
+            # Wczytaliśmy jeden przypadek danej klasy, więc dodajemy go
+            #  do ogólnego wyniku.
+            class_total[label] += 1
+
+        j += 1
+
+print('Dokładność klasyfikacji na {} egzemplarzach zbioru testowego wynosi: '
+      '{:.2f}%'.format(test_elems, 100.0 * correct_number / total_number))
+classes = ("Lato-Regular", "LiberationSans-Regular", "LiberationSerif-Regular")
+for i in range(3):
+    print(
+        'Dokładność klasyfikacji dla klasy {} \
+wynosi {:.2f}%.'.format(classes[i],
+                        100.0 * class_correct[i] / class_total[i]))
